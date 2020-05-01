@@ -9,8 +9,17 @@
 ```
 
 ### Usage:
-See `examples` directory for Lua code.
-Currently krabby will load all Lua code from current working directory. This will change in the future.
+See `examples/scripts` directory for Lua code.
+
+Krabby accepts a data root directory as first (optional) argument. It will load all the `.lua` scripts it can find recursively.
+
+```
+    $ krabby -h
+    $ krabby path/to/data/root
+```
+
+*NOTE:* Krabby will use current directory as data root if no path is specified.
+
 Proper documentation will be written eventually.
 
 ### Powered by:
