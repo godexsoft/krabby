@@ -4,7 +4,7 @@
 ```
     mkdir build
     cd build
-    cmake -DENABLE_LOG=YES
+    cmake -DENABLE_LOG=YES ..
     make
 ```
 
