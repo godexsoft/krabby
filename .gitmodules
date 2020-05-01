@@ -13,3 +13,6 @@
 [submodule "lib/sol2"]
 	path = lib/sol2
 	url = https://github.com/ThePhD/sol2.git
+[submodule "lib/sqlcpp_bridge"]
+	path = lib/sqlcpp_bridge
+	url = https://github.com/GVNG/SQLCPPBridgeFramework.git
