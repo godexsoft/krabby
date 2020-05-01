@@ -1,5 +1,13 @@
 # Krabby
 
+### Compile
+```
+    mkdir build
+    cd build
+    cmake -DENABLE_LOG=YES
+    make
+```
+
 ### Usage:
 See `examples` directory for Lua code.
 Currently krabby will load all Lua code from current working directory. This will change in the future.
