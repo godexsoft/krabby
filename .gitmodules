@@ -1,0 +1,15 @@
+[submodule "lib/crablib"]
+	path = lib/crablib
+	url = https://github.com/hrissan/crablib.git
+[submodule "lib/fmtlib"]
+	path = lib/fmtlib
+	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/inja"]
+	path = lib/inja
+	url = https://github.com/pantor/inja.git
+[submodule "lib/cxxopts"]
+	path = lib/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+[submodule "lib/sol2"]
+	path = lib/sol2
+	url = https://github.com/ThePhD/sol2.git
