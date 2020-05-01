@@ -40,11 +40,7 @@ bool router::handle(http::Client *who, http::Request &request) {
 	log::debug("check routes for '{}' with method {}", request.header.path, request.header.method);
 
 	if (routes_.count(request.header.method)) {
-		log::trace("got some routes for this method...");
-
 		for (auto [rx, routing] : routes_.at(request.header.method)) {
-			log::trace("checking rx...");
-
 			std::cmatch cm{};
 			if (std::regex_match(request.header.path.c_str(), cm, rx)) {
 				auto params = request.parse_query_params();

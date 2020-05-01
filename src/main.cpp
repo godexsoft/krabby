@@ -9,7 +9,7 @@ using namespace schwifty::krabby;
 
 int main(int argc, char *argv[]) {
 	uint16_t port{8888};
-	std::string storage_path{"./"};
+	std::string data_path{"./"};
 	bool logging{false};
 
 	try {
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 		// clang-format off
         options.add_options()
             ("p,port", "TCP port", cxxopts::value<uint16_t>(port))        
-            ("s,storage", "Storage root path", cxxopts::value<std::string>(storage_path))
+            ("path", "Data path (can also be specified as first argument)", cxxopts::value<std::string>(), "path")
             ("h,help", "Help message")
         ;
 		// clang-format on
@@ -27,11 +27,17 @@ int main(int argc, char *argv[]) {
 			options.add_options()("l,logging", "Log to stderr", cxxopts::value<bool>(logging));
 		}
 
+		options.positional_help("[directory]").show_positional_help();
+		options.parse_positional({"path"});
 		auto result = options.parse(argc, argv);
 
 		if (result.count("help")) {
 			fmt::print(options.help({""}));
 			return 0;
+		}
+
+		if (result.count("path")) {
+			data_path = result["path"].as<std::string>();
 		}
 	} catch (const cxxopts::OptionException &e) {
 		log::fatal("Error parsing options: {}", e.what());
@@ -41,18 +47,17 @@ int main(int argc, char *argv[]) {
 	log::enable(logging);
 	log::level(loglevel::trace);
 
-	log::info("storage path: {}", storage_path);
+	log::info("data path: {}", data_path);
 	log::info("service port: {}", port);
 
 	crab::RunLoop runloop;
 
-	singleton<database> db{storage_path};
-	singleton<inja::Environment> env{"./"};
+	singleton<database> db{data_path};
+	singleton<inja::Environment> env{data_path};
 	env.set_lstrip_blocks(true);
 	env.set_trim_blocks(true);
 
-	server app{port};
-	singleton<script_engine> ext{"./", app};
+	server app{port, data_path};
 
 	runloop.run();
 	return 0;

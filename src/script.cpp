@@ -6,9 +6,7 @@ namespace schwifty::krabby {
 using namespace schwifty::logger;
 using json = nlohmann::json;
 
-script_engine::script_engine(std::filesystem::path path, server &server) : path_{path}, server_{server}, router_{} {
-	reload();
-}
+script_engine::script_engine(std::filesystem::path path) : path_{path}, router_{}, mountpoints_{} { reload(); }
 
 void script_engine::reload() {
 	router_.clear();
@@ -19,6 +17,7 @@ void script_engine::reload() {
 
 	register_types();
 	setup_router_api();
+	setup_mountpoint_api();
 
 	// export global objects to lua
 	lua_->set("template", sol::var(std::ref(singleton<inja::Environment>::instance())));
@@ -89,7 +88,6 @@ void script_engine::register_types() {
 		[](json &j, const std::string &key, double value) { j[key] = value; } );
     
     json_type["obj"] = [](json &j, const std::string &key) { return j[key]; };
-
 	// clang-format on
 
 	// global static functions
@@ -122,6 +120,13 @@ void script_engine::setup_router_api() {
 	});
 }
 
+void script_engine::setup_mountpoint_api() {
+	lua_->set_function("Mount", [&](std::string path, std::string fs_path) {
+		mountpoints_.emplace_back(path, path_ / fs_path);
+		log::info("LUA: added mountpoint '{}' -> '{}'", path, fs_path);
+	});
+}
+
 void script_engine::load_extensions(std::filesystem::path path) {
 	log::debug("loading extensions from '{}'", path.string());
 	for (auto &p : std::filesystem::directory_iterator(path)) {
@@ -147,6 +152,15 @@ void script_engine::load_extensions(std::filesystem::path path) {
 			load_extensions(p.path());
 		}
 	}
+}
+
+bool script_engine::handle_mountpoint(http::Client *who, http::Request &request) {
+	for (auto &mnt : mountpoints_) {
+		log::trace("checking mountpoint...");
+		if (mnt.handle(who, request))
+			return true;
+	}
+	return false;
 }
 
 bool script_engine::handle_route(http::Client *who, http::Request &request) { return router_.handle(who, request); }

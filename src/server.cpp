@@ -11,15 +11,16 @@ using namespace std;
 using namespace inja;
 using json = nlohmann::json;
 
-server::server(uint16_t port)
-    : server_{port}, ctx_{singleton<database>::instance()["krabby"]}, router_{}, connections_{} {
+server::server(uint16_t port, std::string path)
+    : server_{port}, ctx_{singleton<database>::instance()["krabby"]}, script_{path}, connections_{} {
 	// ----------------------------------------------------------------------
 	server_.r_handler = [&](auto *who, http::Request &&request) {
 		log::trace("request to '{}'", request.header.path);
 
-		// TODO: all mountpoints
+		if (script_.handle_mountpoint(who, request))
+			return;  // handled by some mountpoint
 
-		if (singleton<script_engine>::instance().handle_route(who, request))
+		if (script_.handle_route(who, request))
 			return;  // handled by some route
 
 		who->write(http::Response::simple_html(404, "Krabby is angry"));
