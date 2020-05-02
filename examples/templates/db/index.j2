@@ -1,0 +1,23 @@
+<html>
+<head>
+    <title>Krabby - storage example</title>
+</head>
+<body>
+    <h2>Key-Value Storage</h2>
+    <form action="/db" method="POST">
+        Name: <input type="text" name="name" /><br/>
+        Age: <input type="text" name="age" /><br/>
+        <input type="submit" value="Save" />
+    </form>
+
+    {% if length(entries) > 0 %}
+        <h3>Existing entries:</h3>
+        <ul>    
+        {% for entry in entries %}
+            <li>name: {{entry.name}}, age: {{entry.age}}</li>
+        {% endfor %}        
+        </ul>
+    {% else %}
+        <h3>No entries in storage yet</h3>
+    {% endif %}
+</body>

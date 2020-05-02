@@ -55,6 +55,25 @@ local t = timer.new(
 t:once(3)
 ```
 
+#### Key-Value Storage
+Krabby creates and maintains an sqlite3 database which can be used as a high-efficient key-value storage.
+You can save `ints`, `doubles`, `strings` and even JSON objects and arrays:
+
+```
+-- loads a JSON array with fallback to empty array
+local records = storage:load("your_key", json.parse("[]"))
+
+local data = json.new()
+data:str("name", "Krabby")
+data:int("age", 420)
+
+-- add a new record and save it back to storage
+records:push_back(data)
+storage:save("your_key", records)
+```
+
+*Note:* The above code automatically serializes and deserializes the JSON object/array.
+
 #### Basic HTTP
 ##### Writing Responses
 Once you will learn about routes below you will know how to apply these functions, but for now here is what is available for writing data back to clients:

@@ -11,8 +11,7 @@ using namespace std;
 using namespace inja;
 using json = nlohmann::json;
 
-server::server(uint16_t port, std::string path)
-    : server_{port}, ctx_{singleton<database>::instance()["krabby"]}, script_{path} {
+server::server(uint16_t port, std::string path) : server_{port}, script_{path} {
 	// ----------------------------------------------------------------------
 	server_.r_handler = [&](auto *who, http::Request &&request) {
 		log::trace("request to '{}'", request.header.path);

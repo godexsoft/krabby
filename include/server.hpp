@@ -30,7 +30,6 @@ public:
 
 private:
 	http::Server server_;   // http service provider
-	sql::context ctx_;      // context for database
 	script_engine script_;  // main scripting interface
 };
 

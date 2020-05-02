@@ -5,57 +5,10 @@
 <body>
     <h1>Welcome, {{name}}!</h1>
     <img src="/public/krabby.gif" />
-
-    <p>WebSocket API messages:</p>
-    <span id="messages"></span>
-
-    <script>
-        window.addEventListener("load", ev => {
-            if (!("WebSocket" in window)) {
-                alert("Your browser does not support WebSocket. Krabby is very sad.")
-                return
-            }
-
-            let messages = document.querySelector('#messages')
-
-            var apiUrl = new URL('/api', window.location.href)
-            apiUrl.protocol = apiUrl.protocol.replace('http', 'ws')
-
-            window.ws = new WebSocket(apiUrl);
-            window.ws.onopen = () => {
-                console.log("opened websocket to krabby")   
-                messages.innerHTML += `<p>! connection opened to /api</p>`             
-            }
-            window.ws.onclose = () => {
-                console.log("connection to krabby api closed")
-                messages.innerHTML += `<p>! connection closed</p>`
-            }
-            window.ws.onerror = e => {
-                switch (e.code) {
-                    case 'ECONNREFUSED':
-                        console.log("connection refused by krabby")
-                        messages.innerHTML += `<p>! connection refused by krabby</p>`
-                        break
-                    default:
-                        console.error("other ws error: ", e)
-                        break
-                }
-            }
-            window.ws.onmessage = ev => {
-                let msg = ev.data
-                console.log("krabby api message: ", msg)
-                messages.innerHTML += `<p>&gt; ${msg}</p>`
-
-                if (msg === "hello") {
-                    let m = "hi back"
-                    window.ws.send(m)
-                    messages.innerHTML += `<p>&lt; ${m}</p>`
-                } else if (msg === "timer") {
-                    let m = "bye"
-                    window.ws.send(m)
-                    messages.innerHTML += `<p>&lt; ${m}</p>`
-                }
-            }            
-        })    
-    </script>
+    
+    <h2>Examples</h2>
+    <ul>
+        <li><a href="/db">db.lua - Key-Value storage example</a></li>
+        <li><a href="/ws">websocket.lua - Websocket API example</a></li>
+    </ul>
 </body>

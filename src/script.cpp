@@ -26,6 +26,7 @@ void script_engine::reload() {
 
 	// export global objects to lua
 	lua_->set("template", sol::var(std::ref(singleton<inja::Environment>::instance())));
+	lua_->set("storage", sol::var(std::ref(singleton<database>::instance().storage())));
 
 	load_extensions(path_);
 }
@@ -81,7 +82,11 @@ void script_engine::register_types() {
 	// clang-format off
     sol::usertype<json> json_type = lua_->new_usertype<json>(
         "json", "new", sol::constructors<json()>(), 
-        "parse", [](const std::string &value) { return json::parse(value); }); 
+				"array", []() { return json::array(); },
+        		"parse", [](const std::string &value) { return json::parse(value); }); 
+
+	json_type["push_back"] = sol::overload(
+		[](json &j, const json& value) { j.push_back(value); } );
 
 	json_type["str"] = sol::overload(
         [](json &j, const std::string &key) { return j[key].get<std::string>(); },
@@ -98,7 +103,37 @@ void script_engine::register_types() {
         [](json &j) { return j.get<double>(); },
 		[](json &j, const std::string &key, double value) { j[key] = value; } );
     
-    json_type["obj"] = [](json &j, const std::string &key) { return j[key]; };
+    json_type["obj"] = sol::overload(
+        [](json &j, const std::string &key) { return j[key]; },        
+		[](json &j, const std::string &key, const json& value) { j[key] = value; } );
+
+	json_type["dump"] = [](json &j) { return j.dump(); };
+
+	sol::usertype<sql_bridge::context> sql_ctx_type =
+	    lua_->new_usertype<sql_bridge::context>("sqlcontext", sol::no_constructor);
+
+	using kvstore = sql_bridge::local_storage<sql_bridge::sqlite_adapter>;
+	sol::usertype<kvstore> sql_local_storage_type =
+	    lua_->new_usertype<kvstore>("sqllocalstore", sol::no_constructor);
+
+	sql_local_storage_type["save"] = sol::overload(
+		static_cast<void(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::save),
+		static_cast<void(kvstore::*)(const std::string&, const int&)const>(&kvstore::save),
+		static_cast<void(kvstore::*)(const std::string&, const double&)const>(&kvstore::save),
+		[](kvstore& store, const std::string& key, const json& data) {  
+			store.save(key, data.dump()); 
+		}
+	);
+
+	sql_local_storage_type["load"] = sol::overload(
+		static_cast<std::string(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::load),
+		static_cast<int(kvstore::*)(const std::string&, const int&)const>(&kvstore::load),
+		static_cast<double(kvstore::*)(const std::string&, const double&)const>(&kvstore::load),
+		[](kvstore& store, const std::string& key, const json& def) {  
+			return json::parse(store.load(key, def.dump()));
+		}
+	);
+
 	// clang-format on
 
 	// global static functions

@@ -1,7 +1,13 @@
 api_connections = {} -- holds open connections over websockets
 
+Get ( "/ws", {}, 
+    function(who, req, matches, params)
+        local output = template:render_file("templates/ws/index.j2", json.new())
+        respond(who, 200, "text/html", output)
+    end )
+
 -- websocket api example
-Get( "/api", {},
+Get( "/ws/api", {},
     function(who, req, matches, params)        
         who:upgrade() -- upgrade to websocket connection
         api_connections[who.id] = true -- save connection for later
