@@ -142,9 +142,11 @@ void script_engine::register_types() {
 	lua_->set_function("respond_text", &server::text_response);
 	lua_->set_function("respond_msg", &server::websocket_response);
 
-	lua_->set_function("hash_password", &hash_password);
+	lua_->set_function("generate_key", &generate_key);
 	lua_->set_function("hash_sha1", &hash_sha1);
 	lua_->set_function("hmac_sha1", &hmac_sha1);
+	lua_->set_function("escape_html", &escape_html);
+	lua_->set_function("string_to_hex", &string_to_hex);
 }
 
 void script_engine::setup_generic_api() {
