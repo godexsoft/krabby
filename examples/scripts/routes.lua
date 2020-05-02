@@ -5,7 +5,7 @@ Get( "/", {},
         local data = json.new()        
         data:str("name", params["name"] or "Krabby")
 
-	local output = template:render_file("templates/index.j2", data)
+	    local output = template:render_file("templates/index.j2", data)
         html_response(who, 200, output)
     end )
 

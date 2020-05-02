@@ -6,18 +6,23 @@ namespace schwifty::krabby {
 using namespace schwifty::logger;
 using json = nlohmann::json;
 
-script_engine::script_engine(std::filesystem::path path) : path_{path}, router_{}, mountpoints_{} { reload(); }
+script_engine::script_engine(std::filesystem::path path)
+    : path_{path}, router_{}, mountpoints_{}, ws_handlers_{}, disconnect_handlers_{} {
+	reload();
+}
 
 void script_engine::reload() {
 	router_.clear();
 	lua_ = std::make_shared<sol::state>();
 
-	log::info("loading up Lua extension engine with root path '{}'", path_.string());
+	log::debug("loading up Lua scripts engine with root path '{}'", path_.string());
 	lua_->open_libraries(sol::lib::base, sol::lib::package);
 
 	register_types();
+	setup_generic_api();
 	setup_router_api();
 	setup_mountpoint_api();
+	setup_websocket_api();
 
 	// export global objects to lua
 	lua_->set("template", sol::var(std::ref(singleton<inja::Environment>::instance())));
@@ -32,10 +37,16 @@ void script_engine::register_types() {
 	timer_type["cancel"] = &crab::Timer::cancel;
 
 	sol::usertype<http::Client> client_type = lua_->new_usertype<http::Client>("client", sol::no_constructor);
+	client_type["upgrade"]                  = [](http::Client &self) { self.web_socket_upgrade(); };
+	client_type["id"] =
+	    sol::readonly_property([](http::Client &self) { return fmt::format("{}", static_cast<void *>(&self)); });
 
 	sol::usertype<http::Request> request_type = lua_->new_usertype<http::Request>("request", sol::no_constructor);
 	request_type["header"]                    = sol::readonly_property(&http::Request::header);
 	request_type["body"]                      = sol::readonly_property(&http::Request::body);
+
+	sol::usertype<http::WebMessage> wm_type = lua_->new_usertype<http::WebMessage>("webmessage", sol::no_constructor);
+	wm_type["body"]                         = sol::readonly_property(&http::WebMessage::body);
 
 	sol::usertype<http::RequestHeader> request_header_type = lua_->new_usertype<http::RequestHeader>(
 	    "request_header", sol::no_constructor, sol::base_classes, sol::bases<http::RequestResponseHeader>());
@@ -93,10 +104,19 @@ void script_engine::register_types() {
 	// global static functions
 	lua_->set_function("html_response", &server::html_response);
 	lua_->set_function("text_response", &server::text_response);
+	lua_->set_function("msg_response", &server::websocket_response);
 
 	lua_->set_function("hash_password", &hash_password);
 	lua_->set_function("hash_sha1", &hash_sha1);
 	lua_->set_function("hmac_sha1", &hmac_sha1);
+}
+
+void script_engine::setup_generic_api() {
+	using lua_disconnect_handler_t = sol::function;
+	lua_->set_function("Disconnect", [&](lua_disconnect_handler_t func) {
+		disconnect_handlers_.emplace_back(func);
+		log::info("LUA: added disconnect handler");
+	});
 }
 
 void script_engine::setup_router_api() {
@@ -127,8 +147,16 @@ void script_engine::setup_mountpoint_api() {
 	});
 }
 
+void script_engine::setup_websocket_api() {
+	using lua_ws_handler_t = sol::function;
+	lua_->set_function("Msg", [&](lua_ws_handler_t func) {
+		ws_handlers_.emplace_back(func);
+		log::info("LUA: added ws handler");
+	});
+}
+
 void script_engine::load_extensions(std::filesystem::path path) {
-	log::debug("loading extensions from '{}'", path.string());
+	log::debug("loading scripts from '{}'", path.string());
 	for (auto &p : std::filesystem::directory_iterator(path)) {
 		if (p.is_regular_file()) {
 			if (p.path().extension().string() == crab::Literal{".lua"}) {
@@ -156,7 +184,6 @@ void script_engine::load_extensions(std::filesystem::path path) {
 
 bool script_engine::handle_mountpoint(http::Client *who, http::Request &request) {
 	for (auto &mnt : mountpoints_) {
-		log::trace("checking mountpoint...");
 		if (mnt.handle(who, request))
 			return true;
 	}
@@ -164,5 +191,19 @@ bool script_engine::handle_mountpoint(http::Client *who, http::Request &request)
 }
 
 bool script_engine::handle_route(http::Client *who, http::Request &request) { return router_.handle(who, request); }
+
+bool script_engine::handle_websocket(http::Client *who, http::WebMessage &&msg) {
+	for (auto &ws : ws_handlers_) {
+		if (ws(who, msg))
+			return true;
+	}
+	return false;
+}
+
+void script_engine::handle_disconnect(http::Client *who) {
+	for (auto &dc : disconnect_handlers_) {
+		dc(who);
+	}
+}
 
 }  // namespace schwifty::krabby

@@ -12,7 +12,7 @@ using namespace inja;
 using json = nlohmann::json;
 
 server::server(uint16_t port, std::string path)
-    : server_{port}, ctx_{singleton<database>::instance()["krabby"]}, script_{path}, connections_{} {
+    : server_{port}, ctx_{singleton<database>::instance()["krabby"]}, script_{path} {
 	// ----------------------------------------------------------------------
 	server_.r_handler = [&](auto *who, http::Request &&request) {
 		log::trace("request to '{}'", request.header.path);
@@ -27,31 +27,18 @@ server::server(uint16_t port, std::string path)
 	};
 
 	server_.w_handler = [&](http::Client *who, http::WebMessage &&message) {
-		if (message.is_binary()) {
-			// TODO
-			return;
-		} else {
-			if (connections_.count(who)) {
-				// TODO
-				return server::json_response(who, 404, "Not implemented");
-			}
-		}
+		if (script_.handle_websocket(who, std::move(message)))
+			return;  // handled by some user scripts
+
+		// close the connection if krabby isn't configured to support it
+		return who->write(http::WebMessage(http::WebMessage::OPCODE_CLOSE, "Krabby hates you"));
 	};
 
-	server_.d_handler = [&](auto *who) {
-		if (connections_.count(who)) {
-			log::info("connection {} closing", static_cast<void *>(who));
-			connections_.erase(who);
-		}
-	};
+	server_.d_handler = [&](http::Client *who) { script_.handle_disconnect(who); };
 }  // namespace schwifty::krabby
 
-void server::json_response(http::Client *who, int code, std::string msg) {
-	json j{{"e", code}};
-	if (!msg.empty()) {
-		j["m"] = msg;
-	}
-	who->write(http::WebMessage(1, j.dump()));
+void server::websocket_response(http::Client *who, std::string msg) {
+	who->write(http::WebMessage(http::WebMessage::OPCODE_TEXT, msg));
 }
 
 void server::html_response(http::Client *who, int code, std::string msg) {
