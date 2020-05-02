@@ -151,11 +151,23 @@ Msg( -- called on websocket message
 
 *Note:* Proper documentation will be written eventually.
 
+#### Utils
+There are a few utils included with Krabby
+* generate_key(size) - generates a `size` long random alphanumeric key 
+* hash_sha1(str) - computes sha1 for a string (raw bytes)
+* hmac_sha1(str, secret) - computes hmac-sha1 for a string with a shared secret
+* string_to_hex(bytes) - computes a hex string for input bytes
+* escape_html(html) - escapes html string
+
+*Note:* See `examples/scripts/utils.lua` for usage examples.
+
 ### Powered by:
+* C++17
 * https://github.com/hrissan/crablib
 * https://github.com/GVNG/SQLCPPBridgeFramework
 * https://github.com/ThePhD/sol2
+* https://github.com/lua/lua (thru sol2)
 * https://github.com/pantor/inja.git
-* https://github.com/nlohmann/json
+* https://github.com/nlohmann/json (thru inja)
 * https://github.com/jarro2783/cxxopts.git
 * https://github.com/fmtlib/fmt  
