@@ -6,7 +6,7 @@ Get( "/", {},
         data:str("name", params["name"] or "Krabby")
 
 	    local output = template:render_file("templates/index.j2", data)
-        html_response(who, 200, output)
+        respond(who, 200, "text/html", output)
     end )
 
 -- usage: navigate to serverurl:port/krabby/anytext?par1=value1&par2=value2
@@ -25,5 +25,5 @@ Get( "/krabby/(\\w{3,16})", {"par1", "par2"},
         end
 
         -- if you don't respond, socket will stay open for a while and timeout eventually
-        html_response(who, 200, "<h3>Krabby is happy</h3>"..output.."</ul>")
+        respond_html(who, 200, "<h3>Krabby is happy</h3>"..output.."</ul>")
     end)

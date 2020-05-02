@@ -8,7 +8,7 @@ using namespace schwifty::logger;
 using namespace schwifty::krabby;
 
 int main(int argc, char *argv[]) {
-	uint16_t port{8888};
+	uint16_t port{8080};
 	std::string data_path{"./"};
 	bool logging{false};
 

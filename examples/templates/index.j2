@@ -50,6 +50,10 @@
                     let m = "hi back"
                     window.ws.send(m)
                     messages.innerHTML += `<p>&lt; ${m}</p>`
+                } else if (msg === "timer") {
+                    let m = "bye"
+                    window.ws.send(m)
+                    messages.innerHTML += `<p>&lt; ${m}</p>`
                 }
             }            
         })    

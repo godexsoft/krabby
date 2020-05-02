@@ -23,6 +23,7 @@ class server {
 public:
 	explicit server(uint16_t port, std::string path);
 
+	static void response(http::Client *who, int code, std::string content_type, std::string data);
 	static void html_response(http::Client *who, int code, std::string msg = std::string{});
 	static void text_response(http::Client *who, int code, std::string msg = std::string{});
 	static void websocket_response(http::Client *who, std::string msg = std::string{});

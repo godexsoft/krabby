@@ -41,6 +41,15 @@ void server::websocket_response(http::Client *who, std::string msg) {
 	who->write(http::WebMessage(http::WebMessage::OPCODE_TEXT, msg));
 }
 
+void server::response(http::Client *who, int code, std::string content_type, std::string data) {
+	http::Response res;
+
+	res.header.set_content_type(std::move(content_type));
+	res.set_body(std::move(data));
+
+	who->write(std::move(res));
+}
+
 void server::html_response(http::Client *who, int code, std::string msg) {
 	who->write(http::Response::simple_html(code, std::move(msg)));
 }

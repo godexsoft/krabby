@@ -102,9 +102,10 @@ void script_engine::register_types() {
 	// clang-format on
 
 	// global static functions
-	lua_->set_function("html_response", &server::html_response);
-	lua_->set_function("text_response", &server::text_response);
-	lua_->set_function("msg_response", &server::websocket_response);
+	lua_->set_function("respond", &server::response);
+	lua_->set_function("respond_html", &server::html_response);
+	lua_->set_function("respond_text", &server::text_response);
+	lua_->set_function("respond_msg", &server::websocket_response);
 
 	lua_->set_function("hash_password", &hash_password);
 	lua_->set_function("hash_sha1", &hash_sha1);

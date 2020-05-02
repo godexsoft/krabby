@@ -6,12 +6,12 @@ Get( "/api", {},
         who:upgrade() -- upgrade to websocket connection
         api_connections[who.id] = true -- save connection for later
 
-        msg_response(who, "hello")
+        respond_msg(who, "hello")
 
         -- setup a timer to spit some message out
         local t = timer.new(
             function()
-                msg_response(who, "krabby timer message")
+                respond_msg(who, "timer") -- client side will send "bye" back to this message
             end)
             
         t:once(3)
@@ -23,8 +23,11 @@ Msg( -- called on websocket message
             return false -- this is not our client but maybe another handler will handle it
         end
         
-        msg_response(who, "you said: "..msg.body)
-        return true -- you need to return true to keep the connection alive
+        if msg.body ~= "bye" then
+            respond_msg(who, "you said: "..msg.body)
+            return true -- you need to return true to keep the connection alive
+        end
+        -- will close connection here because implicit false is returned
     end )
 
 Disconnect( -- called on client disconnect
