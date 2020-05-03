@@ -1,11 +1,24 @@
 # Krabby
+A simple HTTP/WebSocket Lua scriptable webserver written in modern C++.
+
+### Dependencies
+Most of the dependencies are in git submodules under the `lib` directory.
+To fetch Krabby with all its dependencies do this:
+```
+$ git clone https://github.com/godexsoft/krabby.git --recurse-submodules
+```
+
+You will also need `SQLite3` development package and `Lua5.1` or newer with its development package installed on your system. Krabby will use whatever `Lua` you have available (through `sol3`).
+
+`CMake` is used for generation of your preferred build files. By default it will generate a `Makefile`.
+You will need `CMake 3.15` or newer in order to succesfully configure Krabby.
 
 ### Compile
 ```
-mkdir build
-cd build
-cmake -DENABLE_LOG=YES ..
-make
+$ mkdir build
+$ cd build
+$ cmake -DENABLE_LOG=YES ..
+$ make
 ```
 
 ### Usage:
@@ -25,7 +38,7 @@ $ krabby path/to/data/root
 Docker image is available at https://hub.docker.com/r/godexsoft/krabby
 
 ```
-docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.1
+$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.1
 ```
 
 ### API
