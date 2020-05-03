@@ -20,6 +20,14 @@ $ krabby path/to/data/root
 
 *NOTE:* Krabby will use current directory as data root if no path is specified.
 
+### Docker
+
+Docker image is available at https://hub.docker.com/r/godexsoft/krabby
+
+```
+docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.1
+```
+
 ### API
 
 #### JSON
