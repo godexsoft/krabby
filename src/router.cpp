@@ -23,6 +23,33 @@ void router::post(std::string regex, route_t handler, std::set<std::string> mand
 	add_route("POST", regex, handler, mandatory_fields);
 }
 
+void router::delet(std::string regex, std::set<std::string> mandatory_fields, route_t handler) {
+	delet(regex, handler, mandatory_fields);
+}
+
+void router::delet(std::string regex, route_t handler, std::set<std::string> mandatory_fields) {
+	log::info("add DELETE route '{}'", regex);
+	add_route("DELETE", regex, handler, mandatory_fields);
+}
+
+void router::put(std::string regex, std::set<std::string> mandatory_fields, route_t handler) {
+	put(regex, handler, mandatory_fields);
+}
+
+void router::put(std::string regex, route_t handler, std::set<std::string> mandatory_fields) {
+	log::info("add PUT route '{}'", regex);
+	add_route("PUT", regex, handler, mandatory_fields);
+}
+
+void router::patch(std::string regex, std::set<std::string> mandatory_fields, route_t handler) {
+	patch(regex, handler, mandatory_fields);
+}
+
+void router::patch(std::string regex, route_t handler, std::set<std::string> mandatory_fields) {
+	log::info("add PATCH route '{}'", regex);
+	add_route("PATCH", regex, handler, mandatory_fields);
+}
+
 void router::add_route(
     std::string method, std::string regex, route_t handler, std::set<std::string> mandatory_fields) {
 	route r{handler, mandatory_fields};

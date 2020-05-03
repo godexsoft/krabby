@@ -1,3 +1,7 @@
+-- 
+-- Some generic routing and templating examples
+--
+
 -- renders the index page
 -- uses parameter 'name' or defaults to 'Krabby' for greeting via template
 Get( "/", {},
@@ -16,7 +20,7 @@ Get( "/krabby/(\\w{3,16})", {"par1", "par2"},
         local output = "matches:<ul>"
         
         for key,value in pairs(matches) do 
-            output = output.."<li>"..value.."</li>"
+            output = output.."<li>"..key.." = "..value.."</li>"
         end
         
         output = output.."</ul>fields:<ul>"

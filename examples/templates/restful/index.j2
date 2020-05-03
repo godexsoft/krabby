@@ -1,0 +1,84 @@
+<html>
+<head>
+    <title>Krabby - RESTful Users</title>
+</head>
+<body>
+    <h2>RESTful Users (using XMLHttpRequest + JSON)</h2>
+    <span id="users"></span>
+    
+    <h3>Create User</h3>
+    <form id="create-form" action="/restful/users">
+        Name: <input type="text" name="name" /><br/>
+        Password: <input type="password" name="password" /><br/>
+        <input type="submit" value="Create" onclick="return sendForm(this.form)" />
+    </form>
+
+    <script>
+        function sendForm(form) {
+            var formData = new FormData(form)            
+            var xhr = new XMLHttpRequest()
+
+            xhr.open('POST', form.action, true)
+            xhr.onload = function(e) {  
+                console.log("response: ", this.responseText)
+                let json = JSON.parse(this.responseText)
+                if (json.success) {
+                    requestList(document.querySelector('#users'))
+                } else {
+                    alert(`failure: ${json.message}`)
+                }
+            };
+
+            var object = {};
+            formData.forEach((value, key) => {object[key] = value});
+            var json = JSON.stringify(object);
+
+            xhr.send(json)
+            return false // prevent submit
+        }
+
+        function requestList(list) {
+            list.innerHTML = ""
+
+            var xhr = new XMLHttpRequest()
+
+            xhr.open('GET', '/restful/users', true)
+            xhr.onload = function(e) {  
+                let json = JSON.parse(this.responseText)
+                json.users.forEach(u => {
+                    loadUserDetails(u, list)
+                })
+            };
+            xhr.send()            
+        }
+
+        function loadUserDetails(key, list) {
+            var xhr = new XMLHttpRequest()
+
+            xhr.open('GET', `/restful/users/${key}`, true)
+            xhr.onload = function(e) {  
+                let json = JSON.parse(this.responseText)                
+                let user = json.user
+
+                list.innerHTML += `<p>${user.name} (${user.password}) [<a href="#" onclick="deleteUser('${key}')">delete</a>]</p>`                
+            };
+            xhr.send()                
+        }
+
+        function deleteUser(key) {
+            var xhr = new XMLHttpRequest()
+
+            xhr.open('DELETE', `/restful/users/${key}`, true)
+            xhr.onload = function(e) {  
+                let json = JSON.parse(this.responseText)                     
+                requestList(users)           
+            };
+            xhr.send()                
+        }
+
+        window.addEventListener("load", ev => {
+            let users = document.querySelector('#users')
+            requestList(users)
+        })
+    </script>
+</body>

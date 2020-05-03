@@ -1,3 +1,8 @@
+--
+-- A simple WebSocket communication example
+-- see templates/ws/index.j2 for JavaScript client code
+--
+
 api_connections = {} -- holds open connections over websockets
 
 Get ( "/ws", {}, 

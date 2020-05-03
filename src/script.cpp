@@ -79,6 +79,16 @@ void script_engine::register_types() {
 	    lua_->new_usertype<inja::Environment>("inja_environment", sol::no_constructor);
 	inja_env_type["render_file"] = &inja::Environment::render_file;
 
+	using strvec_t = std::vector<std::string>;
+	sol::usertype<strvec_t> stringvec_type =
+	    lua_->new_usertype<strvec_t>("string_vector", "new", sol::constructors<strvec_t()>());
+	stringvec_type["push_back"] = [](strvec_t &v, const std::string &value) { v.push_back(value); };
+	stringvec_type[sol::meta_function::static_index] = [](strvec_t &v, const int &idx) { return v.at(idx - 1); };
+	stringvec_type[sol::meta_function::index]        = [](strvec_t &v, const int &idx) { return v.at(idx - 1); };
+	stringvec_type["erase"]                          = [](strvec_t &v, const std::string &value) {
+        v.erase(std::remove(std::begin(v), std::end(v), value), std::end(v));
+	};
+
 	// clang-format off
     sol::usertype<json> json_type = lua_->new_usertype<json>(
         "json", "new", sol::constructors<json()>(), 
@@ -86,7 +96,11 @@ void script_engine::register_types() {
         		"parse", [](const std::string &value) { return json::parse(value); }); 
 
 	json_type["push_back"] = sol::overload(
-		[](json &j, const json& value) { j.push_back(value); } );
+		[](json &j, const json& value) { j.push_back(value); },
+		[](json &j, const std::string& value) { j.push_back(value); },
+		[](json &j, const double& value) { j.push_back(value); },
+		[](json &j, const bool& value) { j.push_back(value); },
+		[](json &j, const int& value) { j.push_back(value); } );
 
 	json_type["str"] = sol::overload(
         [](json &j, const std::string &key) { return j[key].get<std::string>(); },
@@ -103,10 +117,22 @@ void script_engine::register_types() {
         [](json &j) { return j.get<double>(); },
 		[](json &j, const std::string &key, double value) { j[key] = value; } );
     
+	json_type["bool"] = sol::overload(
+        [](json &j, const std::string &key) { return j[key].get<bool>(); },
+        [](json &j) { return j.get<bool>(); },
+		[](json &j, const std::string &key, bool value) { j[key] = value; } );
+    
     json_type["obj"] = sol::overload(
         [](json &j, const std::string &key) { return j[key]; },        
 		[](json &j, const std::string &key, const json& value) { j[key] = value; } );
 
+    json_type["vec"] = sol::overload(        
+		[](json &j, const std::string &key, const strvec_t& value) { j[key] = value; },
+		[](json &j, const std::string &key, const std::vector<int>& value) { j[key] = value; },
+		[](json &j, const std::string &key, const std::vector<double>& value) { j[key] = value; },
+		[](json &j, const std::string &key, const std::vector<bool>& value) { j[key] = value; } );
+
+	json_type["empty"] = sol::readonly_property(&json::empty);
 	json_type["dump"] = [](json &j) { return j.dump(); };
 
 	sol::usertype<sql_bridge::context> sql_ctx_type =
@@ -120,6 +146,7 @@ void script_engine::register_types() {
 		static_cast<void(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::save),
 		static_cast<void(kvstore::*)(const std::string&, const int&)const>(&kvstore::save),
 		static_cast<void(kvstore::*)(const std::string&, const double&)const>(&kvstore::save),
+		static_cast<void(kvstore::*)(const std::string&, const std::vector<std::string>&)const>(&kvstore::save),
 		[](kvstore& store, const std::string& key, const json& data) {  
 			store.save(key, data.dump()); 
 		}
@@ -129,6 +156,7 @@ void script_engine::register_types() {
 		static_cast<std::string(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::load),
 		static_cast<int(kvstore::*)(const std::string&, const int&)const>(&kvstore::load),
 		static_cast<double(kvstore::*)(const std::string&, const double&)const>(&kvstore::load),
+		static_cast<std::vector<std::string>(kvstore::*)(const std::string&, const std::vector<std::string>&)const>(&kvstore::load),
 		[](kvstore& store, const std::string& key, const json& def) {  
 			return json::parse(store.load(key, def.dump()));
 		}
@@ -175,6 +203,33 @@ void script_engine::setup_router_api() {
 			func(who, req, m, params);
 		});
 		log::info("LUA: added Post route '{}'", path);
+	});
+
+	lua_->set_function("Delete", [&](std::string path, router::fields_t required_fields, lua_route_t func) {
+		router_.delet(path, required_fields, [func](auto *who, auto &req, auto &matches, auto &params) {
+			// forward it to lua
+			std::vector<std::string> m{matches.begin(), matches.end()};
+			func(who, req, m, params);
+		});
+		log::info("LUA: added Delete route '{}'", path);
+	});
+
+	lua_->set_function("Put", [&](std::string path, router::fields_t required_fields, lua_route_t func) {
+		router_.put(path, required_fields, [func](auto *who, auto &req, auto &matches, auto &params) {
+			// forward it to lua
+			std::vector<std::string> m{matches.begin(), matches.end()};
+			func(who, req, m, params);
+		});
+		log::info("LUA: added Put route '{}'", path);
+	});
+
+	lua_->set_function("Patch", [&](std::string path, router::fields_t required_fields, lua_route_t func) {
+		router_.patch(path, required_fields, [func](auto *who, auto &req, auto &matches, auto &params) {
+			// forward it to lua
+			std::vector<std::string> m{matches.begin(), matches.end()};
+			func(who, req, m, params);
+		});
+		log::info("LUA: added Patch route '{}'", path);
 	});
 }
 

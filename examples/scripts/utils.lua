@@ -1,4 +1,7 @@
--- demonstrates a few utils available in Krabby
+--
+-- Demonstrates a few utils available in Krabby
+--
+
 Get( "/util", {},
     function(who, req, matches, params)
         local data = json.new()      

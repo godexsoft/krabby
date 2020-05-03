@@ -1,5 +1,8 @@
--- example using embedded key-value storage.
+--
+-- A simple example using kv-storage.
 -- illustrates how one can use kv-store to save and load json objects and arrays
+--
+
 local __dbkey = "name_age_test"
 
 Get ( "/db", {},     
