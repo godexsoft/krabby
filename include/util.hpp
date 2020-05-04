@@ -73,4 +73,23 @@ static inline std::string hmac_sha1(std::string &&msg, std::string &&key) {
 	return string_to_hex(hash_sha1(outer_key + inner));
 }
 
+static inline std::string str_tolower(std::string s) {
+	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+	return s;
+}
+
+static inline std::string remove_leading_slash(std::string s) {
+	if (*s.begin() == '/') {
+		return s.substr(1);
+	}
+	return s;
+}
+
+static inline std::string append_trailing_slash(std::string s) {
+	if (*s.rbegin() != '/') {
+		return s + "/";
+	}
+	return s;
+}
+
 }  // namespace schwifty::krabby

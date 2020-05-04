@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include "log.hpp"
+#include "util.hpp"
 
 namespace schwifty::krabby {
 
@@ -20,15 +21,12 @@ public:
 		log::trace("checking point '{}' vs path '{}'", point_, request.header.path.substr(0, point_.size()));
 		if (request.header.path.substr(0, point_.size()) == point_) {
 			auto path = request.header.path.substr(point_.size());
-			// fixme: ugly as fuck
-			if (*path.begin() == '/') {
-				path = path.substr(1);
-			}
+			path      = remove_leading_slash(path);
 
 			auto ext       = std::string{"txt"};  // assume txt by default
 			auto ext_start = path.find_last_of('.');
 			if (ext_start != std::string::npos) {
-				ext = path.substr(ext_start + 1);
+				ext = str_tolower(path.substr(ext_start + 1));
 			}
 
 			auto [mime, mime_params] = mime_type_for(ext);

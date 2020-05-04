@@ -38,7 +38,7 @@ $ krabby path/to/data/root
 Docker image is available at https://hub.docker.com/r/godexsoft/krabby
 
 ```
-$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.1
+$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.2
 ```
 
 ### API

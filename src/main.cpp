@@ -12,7 +12,7 @@ void signal_handler(int signal) { std::exit(0); }
 
 int main(int argc, char *argv[]) {
 	uint16_t port{8080};
-	std::string data_path{"./"};
+	std::string data_path{"."};
 	bool logging{false};
 
 	try {
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (result.count("path")) {
-			data_path = result["path"].as<std::string>();
+			data_path = append_trailing_slash(result["path"].as<std::string>());
 		}
 	} catch (const cxxopts::OptionException &e) {
 		log::fatal("Error parsing options: {}", e.what());
