@@ -21,6 +21,18 @@ public:
 	void handle_disconnect(http::Client *who);
 
 private:
+	struct scripting_context {
+		scripting_context(std::filesystem::path path) {}
+
+		router router_;
+		std::vector<mountpoint> mountpoints_;
+		std::vector<ws_handler_t> ws_handlers_;
+		std::vector<dc_handler_t> disconnect_handlers_;
+		sol::state lua_;
+	};
+
+	void swap_context();
+
 	void register_types();
 	void setup_generic_api();
 	void setup_router_api();
@@ -30,11 +42,9 @@ private:
 	void load_extensions(std::filesystem::path path);
 
 	std::filesystem::path path_;
-	router router_;
-	std::vector<mountpoint> mountpoints_;
-	std::vector<ws_handler_t> ws_handlers_;
-	std::vector<dc_handler_t> disconnect_handlers_;
-	std::shared_ptr<sol::state> lua_;
+	crab::Timer swap_timer_;
+	std::shared_ptr<scripting_context> staging_ctx_;
+	std::shared_ptr<scripting_context> main_ctx_;
 };
 
 }  // namespace schwifty::krabby

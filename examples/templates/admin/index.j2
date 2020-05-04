@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Krabby - Admin Tool</title>
+    <style>
+        .messages {
+            background-color: lightgray;
+            border: 1px solid green;
+            display: inline;
+            padding: 2pt;
+            margin-top: 6pt;            
+            display: block;
+        }                                
+    </style>
+</head>
+<body>
+    <h2>Krabby Admin Tool</h2>    
+    <a href="#" onclick="javascript:reloadScripts()">Reload Scripts</a>
+    <br/>
+    <div id="messages" class="messages">Try reloading Krabby using the button above after adding some errors into your .lua code or just by adding or changing any scripts.</div>
+
+    <script>
+        function reloadScripts() {
+            console.log("reloading")
+            var xhr = new XMLHttpRequest()
+
+            xhr.open('GET', "/admin/reload", true)
+            xhr.onload = function(e) {  
+                console.log("response: ", this.responseText)
+                let json = JSON.parse(this.responseText)
+                messages = document.querySelector('#messages')
+
+                if (json.success) {
+                    messages.innerHTML = "Success"
+                } else {
+                    messages.innerHTML = json.message
+                }
+            }            
+            xhr.send()
+        }        
+    </script>
+</body>
