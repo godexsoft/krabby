@@ -16,7 +16,7 @@ script_engine::script_engine(std::filesystem::path path) : path_{path}, swap_tim
 }
 
 void script_engine::reload() {
-	staging_ctx_ = std::make_shared<scripting_context>(path_);
+	staging_ctx_ = std::make_shared<scripting_context>();
 
 	log::debug("loading up Lua scripts engine with root path '{}'", path_.string());
 	staging_ctx_->lua_.open_libraries(sol::lib::base, sol::lib::package);
@@ -36,8 +36,8 @@ void script_engine::reload() {
 }
 
 void script_engine::swap_context() {
-	log::info("Swapping scripting context");
-	main_ctx_    = staging_ctx_;
+	log::debug("Swapping scripting context");
+	master_ctx_  = staging_ctx_;
 	staging_ctx_ = nullptr;
 	log::info("Krabby scripting engine is operational now");
 }
@@ -317,17 +317,17 @@ void script_engine::load_extensions(std::filesystem::path path) {
 }
 
 bool script_engine::handle_mountpoint(http::Client *who, http::Request &request) {
-	for (auto &mnt : main_ctx_->mountpoints_) {
+	for (auto &mnt : master_ctx_->mountpoints_) {
 		if (mnt.handle(who, request))
 			return true;
 	}
 	return false;
 }
 
-bool script_engine::handle_route(http::Client *who, http::Request &request) { return main_ctx_->router_.handle(who, request); }
+bool script_engine::handle_route(http::Client *who, http::Request &request) { return master_ctx_->router_.handle(who, request); }
 
 bool script_engine::handle_websocket(http::Client *who, http::WebMessage &&msg) {
-	for (auto &ws : main_ctx_->ws_handlers_) {
+	for (auto &ws : master_ctx_->ws_handlers_) {
 		if (ws(who, msg))
 			return true;
 	}
@@ -335,7 +335,7 @@ bool script_engine::handle_websocket(http::Client *who, http::WebMessage &&msg) 
 }
 
 void script_engine::handle_disconnect(http::Client *who) {
-	for (auto &dc : main_ctx_->disconnect_handlers_) {
+	for (auto &dc : master_ctx_->disconnect_handlers_) {
 		dc(who);
 	}
 }

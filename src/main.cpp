@@ -1,3 +1,4 @@
+#include <csignal>
 #include <cxxopts.hpp>
 
 #include "script.hpp"
@@ -6,6 +7,8 @@
 
 using namespace schwifty::logger;
 using namespace schwifty::krabby;
+
+void signal_handler(int signal) { std::exit(0); }
 
 int main(int argc, char *argv[]) {
 	uint16_t port{8080};
@@ -50,6 +53,7 @@ int main(int argc, char *argv[]) {
 	log::info("data path: {}", data_path);
 	log::info("service port: {}", port);
 
+	std::signal(SIGINT, signal_handler);
 	crab::RunLoop runloop;
 
 	singleton<database> db{data_path};

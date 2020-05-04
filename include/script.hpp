@@ -22,7 +22,13 @@ public:
 
 private:
 	struct scripting_context {
-		scripting_context(std::filesystem::path path) {}
+		scripting_context() : router_{}, mountpoints_{}, ws_handlers_{}, disconnect_handlers_{}, lua_{} {}
+		~scripting_context() {
+			router_.clear();
+			mountpoints_.clear();
+			ws_handlers_.clear();
+			disconnect_handlers_.clear();
+		}
 
 		router router_;
 		std::vector<mountpoint> mountpoints_;
@@ -44,7 +50,7 @@ private:
 	std::filesystem::path path_;
 	crab::Timer swap_timer_;
 	std::shared_ptr<scripting_context> staging_ctx_;
-	std::shared_ptr<scripting_context> main_ctx_;
+	std::shared_ptr<scripting_context> master_ctx_;
 };
 
 }  // namespace schwifty::krabby

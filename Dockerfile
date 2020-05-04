@@ -14,4 +14,5 @@ RUN apt-get update && \
 WORKDIR /opt/krabby
 COPY --from=build /src/build/krabby ./
 EXPOSE 8080 8080
-CMD ["./krabby", "-l", "/data/"]
+STOPSIGNAL SIGINT
+ENTRYPOINT ["./krabby", "-l", "/data/"]
