@@ -94,13 +94,9 @@ Delete( "/restful/users/(\\w{16})", {},
             return api_fail(who, 404, "user not found")
         end
         
-        -- fixme: when sqlcppbridge is fixed, do proper delete here
-        storage:save(key, "{}")
-
-        local list = storage:load(__restful_users_dbkey, string_vector.new())
-        list:erase(key)
-        storage:save(__restful_users_dbkey, list)
-
+        storage:remove(key) -- remove the record itself
+        storage:remove(__restful_users_dbkey, key) -- remove from the list of keys
+        
         local wrapper = json.new()
         wrapper:bool("success", true)
         respond(who, 200, "application/json", wrapper:dump())

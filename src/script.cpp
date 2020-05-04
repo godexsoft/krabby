@@ -144,26 +144,43 @@ void script_engine::register_types() {
 
 	sql_local_storage_type["save"] = sol::overload(
 		static_cast<void(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::save),
-		static_cast<void(kvstore::*)(const std::string&, const int&)const>(&kvstore::save),
-		static_cast<void(kvstore::*)(const std::string&, const double&)const>(&kvstore::save),
-		static_cast<void(kvstore::*)(const std::string&, const std::vector<std::string>&)const>(&kvstore::save),
+		static_cast<void(kvstore::*)(const std::string&, const strvec_t&)const>(&kvstore::save),
 		[](kvstore& store, const std::string& key, const json& data) {  
 			store.save(key, data.dump()); 
 		}
 	);
 
+	sql_local_storage_type["remove"] = sol::overload(
+		[](kvstore& store, const std::string& key) {  
+			store.remove<std::string>(key);
+		},
+		[](kvstore& store, const std::string& lst, const std::string& itm) {			
+        	auto data = store.load(lst, strvec_t{});
+			if (!data.empty()) {
+				data.erase(std::remove(std::begin(data), std::end(data), itm), std::end(data));
+				store.save(lst, data);
+			}
+		},
+		[](kvstore& store, const std::string& lst, const json& itm) {			
+        	auto data = store.load(lst, strvec_t{});
+			if (!data.empty()) {
+				data.erase(std::remove(std::begin(data), std::end(data), itm.dump()), std::end(data));
+				store.save(lst, data);
+			}
+		}
+	);
+
 	sql_local_storage_type["load"] = sol::overload(
 		static_cast<std::string(kvstore::*)(const std::string&, const std::string&)const>(&kvstore::load),
-		static_cast<int(kvstore::*)(const std::string&, const int&)const>(&kvstore::load),
-		static_cast<double(kvstore::*)(const std::string&, const double&)const>(&kvstore::load),
-		static_cast<std::vector<std::string>(kvstore::*)(const std::string&, const std::vector<std::string>&)const>(&kvstore::load),
+		static_cast<strvec_t(kvstore::*)(const std::string&, const strvec_t&)const>(&kvstore::load),
 		[](kvstore& store, const std::string& key, const json& def) {  
 			return json::parse(store.load(key, def.dump()));
 		}
 	);
+	// clang-format on	
+}
 
-	// clang-format on
-
+void script_engine::setup_generic_api() {
 	// global static functions
 	lua_->set_function("respond", &server::response);
 	lua_->set_function("respond_html", &server::html_response);
@@ -175,13 +192,20 @@ void script_engine::register_types() {
 	lua_->set_function("hmac_sha1", &hmac_sha1);
 	lua_->set_function("escape_html", &escape_html);
 	lua_->set_function("string_to_hex", &string_to_hex);
-}
 
-void script_engine::setup_generic_api() {
 	using lua_disconnect_handler_t = sol::function;
 	lua_->set_function("Disconnect", [&](lua_disconnect_handler_t func) {
 		disconnect_handlers_.emplace_back(func);
 		log::info("LUA: added disconnect handler");
+	});
+
+	lua_->set_function("Reload", [&]() -> std::string {		
+		try {
+			reload();
+			return std::string{};
+		} catch(std::exception& e) {
+			return e.what();
+		}
 	});
 }
 
