@@ -157,7 +157,9 @@ Routes can be used to setup dynamic endpoints. For example to make a RESTful API
 Supported routes are 
 * Get
 * Post
-* Delete, Put and whatever else will be added later
+* Delete 
+* Put 
+* Patch
 
 The following example sets up a route at `/krabby/[3-16 characters long string without spaces]` that will be expecting `par1` and `par2` to be passed in the query string (i.e. `localhost:8080/krabby/hello?par1=first&par2=second`). If the parameters are not passed Krabby will automatically return an error page. All the parameters passed to this route will end up in `params` regardless of them being required or not.
 The `matches` table will contain all the matches for the route path regular expression.
