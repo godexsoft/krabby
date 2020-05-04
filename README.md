@@ -52,9 +52,10 @@ local other = json.parse("{'some':'thing'}")
 data:str("strParam", "some string")
 data:int("intParam", 420)
 data:dbl("doubleParam", 42.0)
+data:bool("boolParam", true)
 data:obj("objOrArray", other)
 
--- note: same goes for str/int/dbl
+-- note: same goes for str, int, dbl and bool
 local otherCopy = data:obj("objOrArray")
 ```
 
@@ -73,16 +74,17 @@ local t = timer.new(
         print("timer fired")
     end)
 
-t:once(3)
+t:once(1.23)
 ```
 
 #### Key-Value Storage
 Krabby creates and maintains an sqlite3 database which can be used as a high-efficient key-value storage.
-You can save `ints`, `doubles`, `strings` and even JSON objects and arrays:
+It operates on `strings`, `arrays of strings` (string_vector) or `JSON objects`.
 
+Example using `JSON` directly:
 ```
 -- loads a JSON array with fallback to empty array
-local records = storage:load("your_key", json.parse("[]"))
+local records = storage:load("your_key", json.array())
 
 local data = json.new()
 data:str("name", "Krabby")
@@ -93,7 +95,35 @@ records:push_back(data)
 storage:save("your_key", records)
 ```
 
-*Note:* The above code automatically serializes and deserializes the JSON object/array.
+Example using `string_vector`:
+```
+local data = storage:load("your key", string_vector.new())
+local new_user = json.new()
+new_user:str("name", name)
+
+local new_key = generate_key(16)        
+storage:save(new_key, new_user) -- save JSON object under key
+        
+data:push_back(new_key)
+storage:save("list key", data)
+```
+
+Removing data:
+```
+-- `user_key` is a string key for an existing user
+storage:remove(user_key) -- remove the JSON object itself
+storage:remove("user list key", user_key) -- remove it from a string_vector list of users
+```
+
+#### Live Reload/Recompile
+Krabby is maintaining two contexts, one `master` and one `staging` context. You can reload the staging context at any time by using `Reload()` anywhere in your Lua code. This will rediscover and recompile all lua scripts under `data root path` and if everything compiles fine it will swap the current `master` context with the newly created `staging`:
+
+```
+local output = Reload()
+if #output > 0 then
+    print("compilation errors", output)
+end
+```
 
 #### Basic HTTP
 ##### Writing Responses
