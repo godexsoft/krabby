@@ -17,9 +17,13 @@ You will need `CMake 3.15` or newer in order to succesfully configure Krabby.
 ```
 $ mkdir build
 $ cd build
-$ cmake -DENABLE_LOG=YES ..
+$ cmake -DENABLE_LOG=ON -DCRAB_TLS=ON ..
 $ make
 ```
+
+*NOTE:*: CRAB_TLS option is only needed if you wish to include SSL support for the client request. For it to work you need to have OpenSSL installed.
+
+*NOTE:*: You can specify the root of your OpenSSL installation (for MacOSX with brew for example): -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
 
 ### Usage:
 See `examples/scripts` directory for Lua code.
@@ -38,7 +42,7 @@ $ krabby path/to/data/root
 Docker image is available at https://hub.docker.com/r/godexsoft/krabby
 
 ```
-$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.2
+$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.3
 ```
 
 ### API

@@ -5,7 +5,7 @@ COPY CMakeLists.txt ./
 COPY include/ ./include 
 COPY lib/ ./lib
 COPY src/ ./src
-RUN mkdir build && cd build && cmake -DENABLE_LOG=YES .. && make
+RUN mkdir build && cd build && cmake -DENABLE_LOG=ON -DCRAB_TLS=ON .. && make
 
 FROM ubuntu:latest
 ARG DEBIAN_FRONTEND=noninteractive
