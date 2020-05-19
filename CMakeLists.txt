@@ -8,6 +8,8 @@ MESSAGE ( STATUS "----" )
 MESSAGE ( STATUS "ENABLE_LOG:   " ${ENABLE_LOG} )
 MESSAGE ( STATUS "----" )
 
+set(CMAKE_CXX_STANDARD 17) # this is for crablib to work
+
 add_subdirectory ( ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmtlib EXCLUDE_FROM_ALL )
 add_subdirectory ( ${CMAKE_CURRENT_SOURCE_DIR}/lib/inja EXCLUDE_FROM_ALL )
 add_subdirectory ( ${CMAKE_CURRENT_SOURCE_DIR}/lib/crablib )

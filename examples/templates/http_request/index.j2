@@ -1,0 +1,15 @@
+<html>
+<head>
+    <title>Krabby - JSON API Request</title>    
+</head>
+<body>
+    <h2>Krabby JSON API Request</h2>    
+    <p>Showing for {{ today }} (API updated {{ metadata.lastUpdatedAt }})</p>
+    <ul>
+    {% for country in countries %}
+        {% if country.reportingDate == today %}
+        <li>{{ country.areaName }} <b>{{ country.dailyChangeInDeaths }}</b> new deaths with grand total of: {{ country.cumulativeDeaths }}</li>
+        {% endif %}
+    {% endfor %}
+    </ul>
+</body>

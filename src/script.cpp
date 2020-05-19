@@ -19,13 +19,15 @@ void script_engine::reload() {
 	staging_ctx_ = std::make_shared<scripting_context>();
 
 	log::debug("loading up Lua scripts engine with root path '{}'", path_.string());
-	staging_ctx_->lua_.open_libraries(sol::lib::base, sol::lib::package);
+	staging_ctx_->lua_.open_libraries(
+	    sol::lib::base, sol::lib::os, sol::lib::table, sol::lib::package, sol::lib::string);
 
 	register_types();
 	setup_generic_api();
 	setup_router_api();
 	setup_mountpoint_api();
 	setup_websocket_api();
+	setup_client_api();
 
 	// export global objects to lua
 	staging_ctx_->lua_.set("template", sol::var(std::ref(singleton<inja::Environment>::instance())));
@@ -58,6 +60,16 @@ void script_engine::register_types() {
 	    staging_ctx_->lua_.new_usertype<http::Request>("request", sol::no_constructor);
 	request_type["header"] = sol::readonly_property(&http::Request::header);
 	request_type["body"]   = sol::readonly_property(&http::Request::body);
+
+	sol::usertype<http::Response> response_type =
+	    staging_ctx_->lua_.new_usertype<http::Response>("response", sol::no_constructor);
+	response_type["header"] = sol::readonly_property(&http::Response::header);
+	response_type["body"]   = sol::readonly_property(&http::Response::body);
+
+	sol::usertype<http::ClientRequestSimple> crequest_type =
+	    staging_ctx_->lua_.new_usertype<http::ClientRequestSimple>("client_request", sol::no_constructor);
+	crequest_type["cancel"] = &http::ClientRequestSimple::cancel;
+	crequest_type["isOpen"] = sol::readonly_property(&http::ClientRequestSimple::is_open);
 
 	sol::usertype<http::WebMessage> wm_type =
 	    staging_ctx_->lua_.new_usertype<http::WebMessage>("webmessage", sol::no_constructor);
@@ -286,6 +298,21 @@ void script_engine::setup_websocket_api() {
 	staging_ctx_->lua_.set_function("Msg", [&](lua_ws_handler_t func) {
 		staging_ctx_->ws_handlers_.emplace_back(func);
 		log::info("LUA: added ws handler");
+	});
+}
+
+void script_engine::setup_client_api() {
+	using lua_creq_handler_t = sol::function;
+	staging_ctx_->lua_.set_function("ClientGet", [&](const std::string& url, lua_creq_handler_t on_res, lua_creq_handler_t on_err) {
+		auto simple = std::make_shared<http::ClientRequestSimple>([on_res](http::Response &&resp) { 
+				on_res(resp);
+			},
+            [on_err](const std::string &err) { 
+				on_err(err);
+			});
+        
+		simple->send_get(url);		
+		return simple;
 	});
 }
 

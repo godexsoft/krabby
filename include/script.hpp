@@ -44,6 +44,7 @@ private:
 	void setup_router_api();
 	void setup_mountpoint_api();
 	void setup_websocket_api();
+	void setup_client_api();
 
 	void load_extensions(std::filesystem::path path);
 

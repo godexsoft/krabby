@@ -149,7 +149,7 @@ Mountpoints are used to expose static content at a given location on the filesys
 
 To expose `data/root/path/public` at `/public/*` on your server you can do this:
 ```
-Mountpoint( "/public", "public" )
+Mount( "/public", "public" )
 ```
 
 ##### Routes
@@ -203,6 +203,28 @@ Msg( -- called on websocket message
 ```
 
 *Note:* Proper documentation will be written eventually.
+
+#### Client Requests
+You can also fetch data from a remote server using `ClientGet`. This works for both `http` and `https`:
+
+```
+handle = ClientGet("https://yourhost.com/api.json", 
+    function(resp) -- called on response                
+        local data = json.parse(resp.body)        
+        local output = template:render_file("templates/mytemplate.j2", data)
+        respond(who, 200, "text/html", output)
+    end, 
+    function(err) -- called on error
+        respond_html(who, 500, "Could not query api: "..err)        
+    end )
+
+-- to cancel the request:
+handle:cancel()
+```
+
+*Note:* The request will automatically get destroyed with no callbacks if it is not saved in a variable/table.
+
+*Note:* See `examples/scripts/http_request.lua` for a more detailed example.
 
 #### Utils
 There are a few utils included with Krabby
