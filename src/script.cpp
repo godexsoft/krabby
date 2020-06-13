@@ -26,7 +26,6 @@ void script_engine::reload() {
 	setup_generic_api();
 	setup_router_api();
 	setup_mountpoint_api();
-	setup_websocket_api();
 	setup_client_api();
 
 	// export global objects to lua
@@ -52,7 +51,12 @@ void script_engine::register_types() {
 
 	sol::usertype<http::Client> client_type =
 	    staging_ctx_->lua_.new_usertype<http::Client>("client", sol::no_constructor);
-	client_type["upgrade"] = [](http::Client &self) { self.web_socket_upgrade(); };
+	client_type["upgrade"] = [](http::Client &self, http::Client::W_handler &&w_handler, crab::Handler &&d_handler) {
+		self.web_socket_upgrade(std::move(w_handler), std::move(d_handler));
+	};
+	client_type["start_long_poll"] = [](http::Client &self, std::function<void()> &&fun) {
+		self.start_long_poll(std::move(fun));
+	};
 	client_type["id"] =
 	    sol::readonly_property([](http::Client &self) { return fmt::format("{}", static_cast<void *>(&self)); });
 
@@ -222,10 +226,6 @@ void script_engine::setup_generic_api() {
 	staging_ctx_->lua_.set_function("string_to_hex", &string_to_hex);
 
 	using lua_disconnect_handler_t = sol::function;
-	staging_ctx_->lua_.set_function("Disconnect", [&](lua_disconnect_handler_t func) {
-		staging_ctx_->disconnect_handlers_.emplace_back(func);
-		log::info("LUA: added disconnect handler");
-	});
 
 	staging_ctx_->lua_.set_function("Reload", [&]() -> std::string {		
 		try {
@@ -293,14 +293,6 @@ void script_engine::setup_mountpoint_api() {
 	});
 }
 
-void script_engine::setup_websocket_api() {
-	using lua_ws_handler_t = sol::function;
-	staging_ctx_->lua_.set_function("Msg", [&](lua_ws_handler_t func) {
-		staging_ctx_->ws_handlers_.emplace_back(func);
-		log::info("LUA: added ws handler");
-	});
-}
-
 void script_engine::setup_client_api() {
 	using lua_creq_handler_t = sol::function;
 	staging_ctx_->lua_.set_function("ClientGet", [&](const std::string& url, lua_creq_handler_t on_res, lua_creq_handler_t on_err) {
@@ -311,7 +303,7 @@ void script_engine::setup_client_api() {
 				on_err(err);
 			});
         
-		simple->send_get(url);		
+		simple->get(url);
 		return simple;
 	});
 }
@@ -352,19 +344,5 @@ bool script_engine::handle_mountpoint(http::Client *who, http::Request &request)
 }
 
 bool script_engine::handle_route(http::Client *who, http::Request &request) { return master_ctx_->router_.handle(who, request); }
-
-bool script_engine::handle_websocket(http::Client *who, http::WebMessage &&msg) {
-	for (auto &ws : master_ctx_->ws_handlers_) {
-		if (ws(who, msg))
-			return true;
-	}
-	return false;
-}
-
-void script_engine::handle_disconnect(http::Client *who) {
-	for (auto &dc : master_ctx_->disconnect_handlers_) {
-		dc(who);
-	}
-}
 
 }  // namespace schwifty::krabby

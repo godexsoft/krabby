@@ -12,29 +12,18 @@ namespace http = crab::http;
 
 class script_engine {
 public:
-	script_engine(std::filesystem::path path);
+	explicit script_engine(std::filesystem::path path);
 	void reload();
 
 	bool handle_route(http::Client *who, http::Request &request);
 	bool handle_mountpoint(http::Client *who, http::Request &request);
-	bool handle_websocket(http::Client *who, http::WebMessage &&msg);
-	void handle_disconnect(http::Client *who);
 
 private:
 	struct scripting_context {
-		scripting_context() : router_{}, mountpoints_{}, ws_handlers_{}, disconnect_handlers_{}, lua_{} {}
-		~scripting_context() {
-			router_.clear();
-			mountpoints_.clear();
-			ws_handlers_.clear();
-			disconnect_handlers_.clear();
-		}
+		sol::state lua_;  // lifetime is longer than router and mountpoints
 
 		router router_;
 		std::vector<mountpoint> mountpoints_;
-		std::vector<ws_handler_t> ws_handlers_;
-		std::vector<dc_handler_t> disconnect_handlers_;
-		sol::state lua_;
 	};
 
 	void swap_context();
@@ -43,7 +32,6 @@ private:
 	void setup_generic_api();
 	void setup_router_api();
 	void setup_mountpoint_api();
-	void setup_websocket_api();
 	void setup_client_api();
 
 	void load_extensions(std::filesystem::path path);

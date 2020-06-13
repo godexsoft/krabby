@@ -25,25 +25,16 @@ server::server(uint16_t port, std::string path) : server_{port}, script_{path} {
 		who->write(http::Response::simple_html(404, "Krabby is angry"));
 	};
 
-	server_.w_handler = [&](http::Client *who, http::WebMessage &&message) {
-		if (script_.handle_websocket(who, std::move(message)))
-			return;  // handled by some user scripts
-
-		// close the connection if krabby isn't configured to support it
-		return who->write(http::WebMessage(http::WebMessage::OPCODE_CLOSE, "Krabby hates you"));
-	};
-
-	server_.d_handler = [&](http::Client *who) { script_.handle_disconnect(who); };
 }  // namespace schwifty::krabby
 
 void server::websocket_response(http::Client *who, std::string msg) {
-	who->write(http::WebMessage(http::WebMessage::OPCODE_TEXT, msg));
+	who->write(http::WebMessage(http::WebMessage::OPCODE_TEXT, std::move(msg)));
 }
 
 void server::response(http::Client *who, int code, std::string content_type, std::string data) {
 	http::Response res;
 
-	res.header.set_content_type(std::move(content_type));
+	res.header.set_content_type(content_type);
 	res.set_body(std::move(data));
 
 	who->write(std::move(res));
