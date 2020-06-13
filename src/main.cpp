@@ -52,7 +52,6 @@ int main(int argc, char *argv[]) {
 
 	log::info("data path: {}", data_path);
 	log::info("service port: {}", port);
-	std::cout << "Running on port {" << port << "} data path {" << data_path << "}" << std::endl;
 
 	std::signal(SIGINT, signal_handler);
 	crab::RunLoop runloop;
