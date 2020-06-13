@@ -10,6 +10,11 @@ $ git clone https://github.com/godexsoft/krabby.git --recurse-submodules
 
 You will also need `SQLite3` development package and `Lua5.1` or newer with its development package installed on your system. Krabby will use whatever `Lua` you have available (through `sol3`).
 
+```
+$ sudo apt-get install lua5.3-dev
+$ sudo apt-get install libsqlite3-dev
+```
+
 `CMake` is used for generation of your preferred build files. By default it will generate a `Makefile`.
 You will need `CMake 3.15` or newer in order to succesfully configure Krabby.
 

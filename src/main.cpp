@@ -12,7 +12,7 @@ void signal_handler(int signal) { std::exit(0); }
 
 int main(int argc, char *argv[]) {
 	uint16_t port{8080};
-	std::string data_path{"."};
+	std::string data_path{"./"};
 	bool logging{false};
 
 	try {
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 
 		// clang-format off
         options.add_options()
-            ("p,port", "TCP port", cxxopts::value<uint16_t>(port))        
+            ("p,port", "TCP port", cxxopts::value<uint16_t>(port))
             ("path", "Data path (can also be specified as first argument)", cxxopts::value<std::string>(), "path")
             ("h,help", "Help message")
         ;
@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
 
 	log::info("data path: {}", data_path);
 	log::info("service port: {}", port);
+	std::cout << "Running on port {" << port << "} data path {" << data_path << "}" << std::endl;
 
 	std::signal(SIGINT, signal_handler);
 	crab::RunLoop runloop;

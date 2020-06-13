@@ -36,15 +36,12 @@ public:
 			log::info("handling path: '{}' -> '{}'", path, p);
 
 			try {
-				auto bytes = read_file(p);
+				http::Response r;
+				r.header.status = 200;
+				r.header.set_content_type(mime, mime_params);
+				r.set_body(read_file(p));
 
-				http::ResponseHeader r;
-				r.status = 200;
-				r.set_content_type(mime, mime_params);
-				r.content_length = bytes.size();
-
-				who->write(std::move(r), crab::BUFFER_ONLY);
-				who->write(bytes.data(), bytes.size());
+				who->write(std::move(r));
 
 				log::info("file handled from path '{}'", p);
 			} catch (std::runtime_error &err) {
@@ -83,7 +80,7 @@ private:
 	}
 
 	// todo: rewrite to use a file wrapper once hrissan makes one for crablib
-	std::vector<uint8_t> read_file(std::filesystem::path filepath) {
+	std::string read_file(std::filesystem::path filepath) {
 		std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
 
 		if (!ifs) {
@@ -100,8 +97,8 @@ private:
 			return {};
 		}
 
-		std::vector<uint8_t> buffer(size);
-		if (!ifs.read((char *)buffer.data(), buffer.size())) {
+		std::string buffer(size, '\0');
+		if (!ifs.read(buffer.data(), buffer.size())) {
 			throw std::runtime_error(filepath.string() + ": " + std::strerror(errno));
 		}
 

@@ -79,14 +79,14 @@ static inline std::string str_tolower(std::string s) {
 }
 
 static inline std::string remove_leading_slash(std::string s) {
-	if (*s.begin() == '/') {
+	if (!s.empty() && s.front() == '/') {
 		return s.substr(1);
 	}
 	return s;
 }
 
 static inline std::string append_trailing_slash(std::string s) {
-	if (*s.rbegin() != '/') {
+	if (!s.empty() && s.back() != '/') {
 		return s + "/";
 	}
 	return s;
