@@ -54,8 +54,8 @@ void script_engine::register_types() {
 	client_type["upgrade"] = [](http::Client &self, http::Client::W_handler &&w_handler, crab::Handler &&d_handler) {
 		self.web_socket_upgrade(std::move(w_handler), std::move(d_handler));
 	};
-	client_type["start_long_poll"] = [](http::Client &self, std::function<void()> &&fun) {
-		self.start_long_poll(std::move(fun));
+	client_type["postpone_response"] = [](http::Client &self, std::function<void()> &&fun) {
+		self.postpone_response(std::move(fun));
 	};
 	client_type["id"] =
 	    sol::readonly_property([](http::Client &self) { return fmt::format("{}", static_cast<void *>(&self)); });
