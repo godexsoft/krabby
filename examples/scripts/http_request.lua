@@ -1,9 +1,6 @@
 -- 
 -- JSON API request example
 --
-
--- renders the index page
--- uses parameter 'name' or defaults to 'Krabby' for greeting via template
 Get( "/apireq", {},
     function(who, req, matches, params)        
 
@@ -20,9 +17,9 @@ Get( "/apireq", {},
             function(err) 
                 respond_html(who, 500, "Could not query api: "..err)        
             end )
-        who:start_long_poll(
+        who:postpone_response(
             function()
                 client:cancel()
-            end)
+            end )
     end )
 

@@ -48,7 +48,7 @@ $ krabby path/to/data/root
 Docker image is available at https://hub.docker.com/r/godexsoft/krabby
 
 ```
-$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.3
+$ docker run -d --rm -v /path/to/data/root:/data:rw -p 8080:8080 --name krabby godexsoft/krabby:0.0.4
 ```
 
 ### API
@@ -145,15 +145,6 @@ respond_text(who, 401, "not authorized text here")
 respond_msg(who, "arbitrary text data for websocket")
 ```
 
-##### Disconnect Handler
-When a connection to Krabby is closed all functions that are setup with `Disconnect` will be called:
-```
-Disconnect( -- called on client disconnect
-    function(who)
-        -- react in some way if needed
-    end )
-```
-
 ##### Mountpoints
 Mountpoints are used to expose static content at a given location on the filesystem. The paths are relative to `data root` specified at startup.
 
@@ -189,30 +180,39 @@ Get( "/krabby/(\\w{3,16})", {"par1", "par2"},
 *Note:* if you don't require any parameters just pass `{}` for the list.
 
 #### WebSockets
-WebSocket communication is possible in Krabby. 
+WebSocket communication is possible in Krabby. The `upgrade` function upgrades a HTTP socket to WebSocket. It accepts two functions as its arguments: a onMessage callback and a onDisconnect callback.
 Here is an example of the server script for a WebSocket API:
 ```
-api_connections = {} -- holds open connections over websockets
-
 Get( "/api", {},
     function(who, req, matches, params)
-        who:upgrade() -- upgrade to websocket connection
-        api_connections[who.id] = true -- save connection for later
-        respond_msg(who, "hello") -- send a message
-    end )
-
-Msg( -- called on websocket message
-    function(who, msg)
-        if not(api_connections[who.id]) then
-            return false -- this is not our client but maybe another handler will handle it
-        end
-        
-        respond_msg(who, "you said: "..msg.body)
-        return true -- you need to return true to keep the connection alive
+    who:upgrade(
+        function(msg)
+            respond_msg(who, "hello") -- send a message                
+            return true -- you need to return true to keep the connection alive                
+        end,
+        function()
+            print("web socket closed")
+        end )
     end )
 ```
 
 *Note:* Proper documentation will be written eventually.
+
+##### Handling Disconnect
+When a connection is established via a route it's expected that your code does one of the following:
+- write a response with one of the functions listed in the corresponding section
+- call `upgrade` to initiate WebSocket communication
+- call `postpone_response` if you need more time to generate a response (e.g. via timer or a client request)
+
+*NOTE:* If none of the above was done the client will automatically receive a `Not found` response.
+
+The function that was setup with `postpone_response` on its respective `who` will be called on disconnect:
+```
+who:postpone_response(
+    function()
+        -- code to handle disconnect of who
+    end )
+```
 
 #### Client Requests
 You can also fetch data from a remote server using `ClientGet`. This works for both `http` and `https`:
